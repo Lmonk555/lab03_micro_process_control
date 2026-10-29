@@ -1,0 +1,73 @@
+#include "main.h"
+#include "timer.h"
+#include "input_reading.h"
+#include "input_processing.h"
+
+
+
+#define NUM_BUTTONS		3
+#define AUTO_REPEAT_MS	500
+
+
+enum ButtonState{BUTTON_RELEASED,
+				 BUTTON_PRESSED,
+				 BUTTON_PRESSED_MORE_THAN_1_SECOND} ;
+enum ButtonState buttonState = BUTTON_RELEASED;
+
+
+static int mode = MODE_NORMAL;
+static int duration[3] = { 5, 2, 3 };	// default duration of { RED, YELLOW, GREEN }
+static int tempValue = 0;
+
+
+int get_mode(void)	{ return mode; }
+int get_temp(void)	{ return tempValue; }
+
+
+int get_duration(int index)
+{
+    if (index < 0 || index > 2) return 0;
+    return duration[index];
+}
+
+
+
+void fsm_for_input_processing(void)
+{
+    switch (buttonState)
+    {
+		case BUTTON_RELEASED:
+			if (is_button_pressed(0))
+			{
+				buttonState = BUTTON_PRESSED;
+				mode++;							// change mode on press
+				if (mode > MODE_MAX) mode = MODE_NORMAL;
+			}
+			break;
+
+
+		case BUTTON_PRESSED:
+			if (!is_button_pressed(0))
+			{
+				buttonState = BUTTON_RELEASED;
+			}
+			else if (is_button_pressed_1s(0))
+			{
+				buttonState = BUTTON_PRESSED_MORE_THAN_1_SECOND;
+			}
+			break;
+
+
+		case BUTTON_PRESSED_MORE_THAN_1_SECOND:
+			if (!is_button_pressed(0))
+			{
+				buttonState = BUTTON_RELEASED;
+			}
+			// no auto-repeat for the mode button
+			break;
+    }
+}
+
+
+
+

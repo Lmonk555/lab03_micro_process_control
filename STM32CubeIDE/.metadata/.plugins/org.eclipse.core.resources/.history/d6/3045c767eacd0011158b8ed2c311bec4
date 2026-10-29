@@ -1,0 +1,26 @@
+#ifndef INC_TIMER_H_
+#define INC_TIMER_H_
+
+
+#include "main.h"
+
+
+// Match the TIM2 interrupt period (in ms)
+#define TIMER_CYCLE		1
+#define MAX_TIMERS		5
+
+
+// Timer indexes
+#define TIMER_TRAFFIC	0	// 1 s tick for countdown
+#define TIMER_BLINK		1	// 250 ms toggle -> 2 Hz blink
+#define TIMER_SCAN		2	// 7-seg digit scanning
+#define TIMER_AUTOINC	3	// BTN2 auto-repeat (500 ms)
+
+
+void setTimer(int index, int duration_ms);
+int  isTimerExpired(int index);
+void timerRun(void);
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
+
+
+#endif /* INC_TIMER_H_ */

@@ -1,0 +1,23 @@
+17:11:41 **** Incremental Build of configuration Debug for project lab_03 ****
+make -j12 all 
+arm-none-eabi-gcc "../Core/Src/led_display.c" -mcpu=cortex-m3 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F103x6 -c -I../Core/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -MMD -MP -MF"Core/Src/led_display.d" -MT"Core/Src/led_display.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/led_display.o"
+arm-none-eabi-gcc -o "lab_03.elf" @"objects.list"   -mcpu=cortex-m3 -T"C:\Users\ThinhkPad\OneDrive\STM32CubeIDE_Projects_Thinkpad\lab03\lab_03\STM32F103C6UX_FLASH.ld" --specs=nosys.specs -Wl,-Map="lab_03.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: lab_03.elf
+ 
+arm-none-eabi-size   lab_03.elf 
+arm-none-eabi-objdump -h -S  lab_03.elf  > "lab_03.list"
+arm-none-eabi-objcopy  -O ihex  lab_03.elf  "lab_03.hex"
+   text	   data	    bss	    dec	    hex	filename
+   9480	    176	   1744	  11400	   2c88	lab_03.elf
+arm-none-eabi-objcopy  -O binary  lab_03.elf  "lab_03.bin"
+Finished building: default.size.stdout
+ 
+Finished building: lab_03.hex
+Finished building: lab_03.bin
+ 
+Finished building: lab_03.list
+ 
+ 
+
+17:11:42 Build Finished. 0 errors, 0 warnings. (took 564ms)
+

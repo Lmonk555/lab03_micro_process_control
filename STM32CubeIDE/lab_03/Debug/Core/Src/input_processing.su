@@ -1,0 +1,5 @@
+input_processing.c:39:5:get_mode	4	static
+input_processing.c:46:5:get_duration	16	static
+input_processing.c:54:5:get_temp	4	static
+input_processing.c:61:13:button_action	16	static
+input_processing.c:103:6:fsm_for_input_processing	16	static

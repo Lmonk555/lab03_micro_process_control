@@ -1,0 +1,183 @@
+#include "main.h"
+#include "timer.h"
+#include "input_processing.h"
+#include "led_display.h"
+
+
+
+typedef struct
+{
+    GPIO_TypeDef *port;
+    uint16_t pin;
+} SegPin;
+
+
+SegPin segments[] =
+{
+    { SEG0_GPIO_Port, SEG0_Pin },
+    { SEG1_GPIO_Port, SEG1_Pin },
+    { SEG2_GPIO_Port, SEG2_Pin },
+    { SEG3_GPIO_Port, SEG3_Pin },
+    { SEG4_GPIO_Port, SEG4_Pin },
+    { SEG5_GPIO_Port, SEG5_Pin },
+    { SEG6_GPIO_Port, SEG6_Pin },
+};
+
+
+GPIO_PinState digitPatterns[10][7] =
+{
+    { RESET, RESET, RESET, RESET, RESET, RESET, SET   },	// 0
+    { SET,   RESET, RESET, SET,   SET,   SET,   SET   },	// 1
+    { RESET, RESET, SET,   RESET, RESET, SET,   RESET },	// 2
+    { RESET, RESET, RESET, RESET, SET,   SET,   RESET },	// 3
+    { SET,   RESET, RESET, SET,   SET,   RESET, RESET },	// 4
+    { RESET, SET,   RESET, RESET, SET,   RESET, RESET },	// 5
+    { RESET, SET,   RESET, RESET, RESET, RESET, RESET },	// 6
+    { RESET, RESET, RESET, SET,   SET,   SET,   SET   },	// 7
+    { RESET, RESET, RESET, RESET, RESET, RESET, RESET },	// 8
+    { RESET, RESET, RESET, RESET, SET,   RESET, RESET },	// 9
+};
+
+
+
+// ######################################################################################################################################
+// ######################################################################################################################################
+// ######################################################################################################################################
+
+
+
+#define SCAN_PERIOD_MS	10
+#define BLINK_PERIOD_MS	250
+
+static int led_buffer[4] = { 0, 0, 0, 0 };
+static int index_led = 0;
+
+static GPIO_TypeDef *const enPort[4] = { EN0_GPIO_Port, EN1_GPIO_Port, EN2_GPIO_Port, EN3_GPIO_Port };
+static const uint16_t enPin[4]       = { EN0_Pin, EN1_Pin, EN2_Pin, EN3_Pin };
+
+static GPIO_TypeDef *const ledPort[3][2] =
+{
+    { RED1_GPIO_Port,    RED2_GPIO_Port    },
+    { YELLOW1_GPIO_Port, YELLOW2_GPIO_Port },
+    { GREEN1_GPIO_Port,  GREEN2_GPIO_Port  }
+};
+
+static const uint16_t ledPin[3][2] =
+{
+    { RED1_Pin,    RED2_Pin    },
+    { YELLOW1_Pin, YELLOW2_Pin },
+    { GREEN1_Pin,  GREEN2_Pin  }
+};
+
+
+
+// ######################################################################################################################################
+// ######################################################################################################################################
+// ######################################################################################################################################
+
+
+
+void display7SEG(int num)
+{
+    if (num < 0 || num > 9) return;
+
+	HAL_GPIO_WritePin(EN0_GPIO_Port, EN0_Pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(EN1_GPIO_Port, EN1_Pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(EN2_GPIO_Port, EN2_Pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(EN3_GPIO_Port, EN3_Pin, GPIO_PIN_SET);
+
+    for (int i = 0; i < 7; i++)
+        HAL_GPIO_WritePin(segments[i].port, segments[i].pin, digitPatterns[num][i]);
+}
+
+
+
+// ######################################################################################################################################
+// ######################################################################################################################################
+// ######################################################################################################################################
+
+
+
+static void update_buffer(int mode, int value)
+{
+	led_buffer[0] = mode / 10;
+	led_buffer[1] = mode % 10;
+	led_buffer[2] = value / 10;
+	led_buffer[3] = value % 10;
+}
+
+
+static void scan_leds(void)
+{
+    display7SEG(led_buffer[index_led]);		// turns all EN off, writes the segments
+    HAL_GPIO_WritePin(enPort[index_led], enPin[index_led], GPIO_PIN_RESET);	// enable one digit
+    index_led = (index_led + 1) % 4;
+}
+
+
+static void leds_all_off(void)						// active-low: SET = off
+{
+    for (int c = 0; c < 3; c++)
+        for (int r = 0; r < 2; r++)
+            HAL_GPIO_WritePin(ledPort[c][r], ledPin[c][r], GPIO_PIN_SET);
+}
+
+
+static void leds_toggle_color(int color)
+{
+    if (color < 0 || color > 2) return;
+    for (int r = 0; r < 2; r++)
+        HAL_GPIO_TogglePin(ledPort[color][r], ledPin[color][r]);
+}
+
+
+
+// ######################################################################################################################################
+// ######################################################################################################################################
+// ######################################################################################################################################
+
+
+
+void output_init(void)
+{
+    leds_all_off();
+    setTimer(TIMER_SCAN, SCAN_PERIOD_MS);
+}
+
+void fsm_for_output_processing(void)
+{
+    static int lastMode = 0;
+    int m = get_mode();
+
+    if (m != lastMode)
+    {
+        lastMode = m;
+        leds_all_off();
+        setTimer(TIMER_BLINK, BLINK_PERIOD_MS);
+    }
+
+    if (m == MODE_NORMAL)
+    	update_buffer(m, 0);
+    else
+    	update_buffer(m, get_duration(m - MODE_RED));
+
+    if (isTimerExpired(TIMER_SCAN))
+    {
+        setTimer(TIMER_SCAN, SCAN_PERIOD_MS);
+        scan_leds();
+    }
+
+    if (m != MODE_NORMAL && isTimerExpired(TIMER_BLINK))
+    {
+        setTimer(TIMER_BLINK, BLINK_PERIOD_MS);
+        leds_toggle_color(m - MODE_RED);
+    }
+}
+
+
+
+
+
+
+
+

@@ -1,0 +1,10 @@
+led_display.c:92:6:display7SEG	32	static
+led_display.c:107:6:update_buffer	16	static
+led_display.c:121:6:scan_leds	8	static
+led_display.c:129:6:leds_all_off	16	static
+led_display.c:137:6:leds_toggle_color	24	static
+led_display.c:145:6:output_init	8	static
+led_display.c:156:13:set_road	24	static
+led_display.c:164:13:traffic_enter	40	static
+led_display.c:208:13:traffic_tick	8	static
+led_display.c:242:6:fsm_for_output_processing	16	static
